@@ -1,0 +1,228 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Nemovitosti – přehled</title>
+<style>
+  :root {
+    --bg: #f4f5f7;
+    --card: #ffffff;
+    --text: #1a1d23;
+    --muted: #6b7280;
+    --accent: #166534;
+    --border: #e5e7eb;
+    --radius: 12px;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--text);
+    font-family: -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    line-height: 1.5;
+  }
+  header {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 24px 20px 8px;
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 16px;
+    flex-wrap: wrap;
+  }
+  header h1 { margin: 0; font-size: 1.4rem; }
+  header p { margin: 0; color: var(--muted); font-size: 0.9rem; }
+  .sortbar {
+    max-width: 1200px;
+    margin: 12px auto 0;
+    padding: 0 20px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: wrap;
+  }
+  .sortbar span { color: var(--muted); font-size: 0.85rem; }
+  .sortbar button {
+    border: 1px solid var(--border);
+    background: var(--card);
+    color: var(--text);
+    padding: 6px 12px;
+    border-radius: 999px;
+    font-size: 0.85rem;
+    font-weight: 600;
+    cursor: pointer;
+  }
+  .sortbar button:hover { border-color: var(--accent); }
+  .sortbar button.active { background: var(--accent); border-color: var(--accent); color: #fff; }
+  .grid {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 16px 20px 20px;
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+    gap: 20px;
+  }
+  .card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06);
+    transition: transform 0.12s ease, box-shadow 0.12s ease;
+  }
+  .card:hover { transform: translateY(-2px); box-shadow: 0 6px 16px rgba(0, 0, 0, 0.1); }
+  .thumb { display: block; aspect-ratio: 16 / 10; background: #eef0f2; }
+  .thumb img { width: 100%; height: 100%; object-fit: cover; display: block; }
+  .body { padding: 14px 16px 16px; display: flex; flex-direction: column; gap: 8px; flex: 1; }
+  .price { font-size: 1.2rem; font-weight: 700; color: var(--accent); }
+  .title { font-size: 0.98rem; }
+  .source {
+    align-self: flex-start;
+    background: #eef1f5;
+    color: #475569;
+    font-size: 0.75rem;
+    font-weight: 600;
+    padding: 3px 9px;
+    border-radius: 999px;
+    text-transform: lowercase;
+  }
+  .facts { list-style: none; margin: 0; padding: 0; display: flex; flex-wrap: wrap; gap: 6px; }
+  .facts li {
+    background: #eef7ef;
+    color: var(--accent);
+    font-size: 0.8rem;
+    font-weight: 600;
+    padding: 3px 9px;
+    border-radius: 999px;
+  }
+  .travel {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 8px 10px;
+    border-radius: 8px;
+    background: #f0f4ff;
+    color: #1e3a8a;
+    font-size: 0.82rem;
+    font-weight: 600;
+    flex-wrap: wrap;
+  }
+  .travel .dist { font-size: 0.95rem; }
+  .meta {
+    margin-top: auto;
+    padding-top: 8px;
+    border-top: 1px solid var(--border);
+    display: flex;
+    justify-content: space-between;
+    gap: 8px;
+    color: var(--muted);
+    font-size: 0.8rem;
+    flex-wrap: wrap;
+  }
+  .meta .energy { color: var(--text); }
+  a.btn {
+    display: inline-block;
+    text-align: center;
+    margin-top: 4px;
+    padding: 8px 12px;
+    border-radius: 8px;
+    background: var(--accent);
+    color: #fff;
+    text-decoration: none;
+    font-size: 0.85rem;
+    font-weight: 600;
+  }
+  a.btn:hover { filter: brightness(1.1); }
+  .empty { padding: 60px 20px; text-align: center; color: var(--muted); }
+  .note {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 0 20px 40px;
+    color: var(--muted);
+    font-size: 0.78rem;
+  }
+</style>
+</head>
+<body>
+<header>
+  <h1>Nemovitosti – přehled</h1>
+  <p>Vygenerováno {{ generated_at }} · {{ listings|length }} inzerátů
+    {%- for source, count in source_counts.items() if count %} · {{ count }}× {{ source }}{% endfor %}</p>
+</header>
+{% if listings %}
+<div class="sortbar">
+  <span>Řadit podle:</span>
+  <button type="button" data-sort="distance" class="active">Vzdálenost</button>
+  <button type="button" data-sort="price">Cena</button>
+  <button type="button" data-sort="car">Autem</button>
+  <button type="button" data-sort="transit">MHD</button>
+</div>
+<div class="grid" id="grid">
+  {% for l in listings %}
+  <article class="card"
+    data-price="{{ l.price or 0 }}"
+    data-distance="{{ l.dist_km or '' }}"
+    data-car="{{ l.car_min or '' }}"
+    data-transit="{{ l.transit_min or '' }}">
+    <a class="thumb" href="{{ l.url }}" target="_blank" rel="noopener">
+      {% if l.image %}
+      <img src="{{ l.image }}" alt="{{ l.address }}" loading="lazy">
+      {% endif %}
+    </a>
+    <div class="body">
+      {% if l.source %}<span class="source">{{ l.source }}</span>{% endif %}
+      <div class="price">{{ l.price_fmt }}</div>
+      <div class="title">{{ l.address }}</div>
+      <ul class="facts">
+        {% if l.rooms %}<li>{{ l.rooms }}</li>{% endif %}
+        {% if l.area %}<li>{{ l.area }} m²</li>{% endif %}
+        {% if l.garden %}<li>zahrada {{ l.garden }} m²</li>{% endif %}
+      </ul>
+      {% if l.dist_km is not none %}
+      <div class="travel">
+        <span class="dist">{{ l.dist_km }} km</span>
+        <span>auto ~{{ l.car_min }} min</span>
+        <span>MHD ~{{ l.transit_min }} min</span>
+      </div>
+      {% endif %}
+      <div class="meta">
+        {% if l.since %}<span>od {{ l.since }}</span>{% endif %}
+        {% if l.energy %}<span class="energy">{{ l.energy }}</span>{% endif %}
+      </div>
+      <a class="btn" href="{{ l.url }}" target="_blank" rel="noopener">Detail na {{ l.source_domain or 'sreality.cz' }} &rarr;</a>
+    </div>
+  </article>
+  {% endfor %}
+</div>
+<p class="note">
+  Vzdálenost a časy do stanice Můstek (metro A/B): vzdálenost a jízda autem
+  ze skutečné silniční sítě (OSRM), čas autem s ~30% rezervou mimo dopravní
+  špičku. Čas MHD je odhad (chůze ~8&nbsp;min, čekání ~6&nbsp;min, jízda
+  ~18&nbsp;km/h + případný přestup při křížení centra). Slouží k porovnání
+  nabídek, ne jako přesný čas příjezdu.
+</p>
+<script>
+  const grid = document.getElementById('grid');
+  const buttons = document.querySelectorAll('.sortbar button[data-sort]');
+  buttons.forEach(btn => btn.addEventListener('click', () => {
+    buttons.forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    const key = btn.dataset.sort;
+    const cards = Array.from(grid.children);
+    cards.sort((a, b) => {
+      const av = a.dataset[key] === '' ? Infinity : parseFloat(a.dataset[key]);
+      const bv = b.dataset[key] === '' ? Infinity : parseFloat(b.dataset[key]);
+      return av - bv;
+    });
+    cards.forEach(c => grid.appendChild(c));
+  }));
+</script>
+{% else %}
+<div class="empty">Žádné inzeráty nevyhovují zadaným filtrům.</div>
+{% endif %}
+</body>
+</html>

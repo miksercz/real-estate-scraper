@@ -28,3 +28,5 @@ venv/
 
 # Generated scrapes
 *.csv
+/*.html
+commute_cache.json
