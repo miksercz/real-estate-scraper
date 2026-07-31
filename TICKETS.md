@@ -17,3 +17,4 @@
 |13| **Systemd service** | Create a systemd unit on the X270 to keep the FastAPI server (and optional OpenVPN client) running. | To Do |
 |14| **Testing suite** | Write pytest tests for each scraper (using saved HTML fixtures) and for the FastAPI endpoints. | To Do |
 |15| **CI/CD pipeline** | Configure GitHub Actions to run tests, build the Docker image, and optionally push to a container registry. | To Do |
+|16| **Active listing protection** | Ensure only listings with rendered `<a href="/detail/...">` links are saved, skipping inactive ones. | Done |
